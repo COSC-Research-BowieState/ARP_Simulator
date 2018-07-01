@@ -5,7 +5,7 @@ import math
 import cmath
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy as sp
+import csv
 from scipy import special
 pi = math.pi
 
@@ -15,7 +15,7 @@ kParam1 = 2 #k-parameter for Erlang/gamma distribution (ON)
 kParam2 = 2 #k-parameter for Erlang/gamma distribution (OFF)
 var1 = lambda1 #variance parameter for log-normal distribution (ON)
 var2 = lambda2 #variance parameter for log-normal distribution (OFF)
-N = 30000 #number of samples
+N = 300000 #number of samples
 occupancy = [0]*N
 stateTrans = [] #tracks alternating states [1,0,1,0,1,0,...]
 intTimes = [] #tracks intervals
@@ -133,23 +133,14 @@ pwrStates = np.zeros((dLen,dLen*N-dLen+1));
 t = dLen*N-dLen+1
 for i in range(t):
     totalAvgPwr.itemset(i,sum(np.abs(inputRF[i:i+dLen-1])**2)/dLen)
-#    for k in  t:
-#        pwrStates.itemset((i,k),i+dLen-1)
-    #print(pwrStates[i:,])
+    for k in  range(t, dLen):
+        pwrStates.itemset((i,k-1),k)
 
 #Observed states based on energy detector
 obsState = totalAvgPwr > thresh;
 plt.figure()
-r = np.zeros((1,dLen*N-dLen+1))
-for i in range(t):
-    r.itemset(i,int(i))
-    
-ts = np.array([i for i in range(dLen*N-dLen+1)])
-s = 10*np.log10(totalAvgPwr)-30
 
-print(r)
-plt.subplot(2,1,1)
-plt.plot(10*np.log10(thresh*np.ones(np.size(totalAvgPwr)))-30)
+plt.plot(np.array([i for i in range(dLen*N-dLen+1)]),10*np.log10(thresh*np.ones(np.size(totalAvgPwr)))-30)
 
 #energy detector threshold
 #plt.plot(t,s,dLen*N-dLen+1)
@@ -157,17 +148,19 @@ plt.title('ARP Simulator')
 plt.xlabel('Samples')
 plt.ylabel('Total Average Power (dBm)')
 plt.show()
-plt.subplot(2,1,2)
+#plt.subplot(2,1,2)
 plt.plot(inputRF[dLen:dLen*N])
 plt.title('ARP Simulator')
 plt.xlabel('Samples')
 plt.ylabel('Amplitude (V)')
 plt.show()
 
-
+with open("arp_dataset.txt", 'w+') as arp_dataset:
+     wr = csv.writer(arp_dataset, quoting=csv.QUOTE_ALL)
+     wr.writerow(inputRF[dLen:dLen*N])
 #Calculates detection accuracy, false alarm rate, and missed detection rate
 #detection accuracy evaluated in terms of soonest detection
-#dAcc = sum(obsState==occSwitch(dLen:dLen*N))/(dLen*N-dLen+1);
+#dAcc = np.sum(obsState==occSwitch(dLen:dLen*N))/(dLen*N-dLen+1);
 #coherent detection accuracy with the window jumping by dLen samples
 #per observations
 #dAcc_coherent = sum(obsState(1:dLen:dLen*N-dLen+1)==occupancy)/N;
