@@ -11,7 +11,7 @@ from scipy import special
 
 class ARP_Simulator:
     
-    def dataGenerator(self,powerLevel,csvName):
+    def dataGenerator(self,powerLevel):
         pi = math.pi
         lambda1 = 0.005 #arrival rate per sample
         lambda2 = 0.005 #survival rate per sample
@@ -110,7 +110,7 @@ class ARP_Simulator:
         
         
         ###input RF signal generation###
-        dLen = 100 #length of the energy detector
+        dLen = 10 #length of the energy detector
         fs = 100e6
         time = [i/fs for i in range(N*dLen)]
         powerLvl = powerLevel #power in dBm
@@ -142,18 +142,31 @@ class ARP_Simulator:
         
         #Observed states based on energy detector
         obsState = totalAvgPwr > thresh;
-        plt.figure()
-
-        
-        self.saveDataSet(zip(inputRF[dLen:dLen*N]),csvName)
+        plt.plot(np.array([i for i in range(dLen*N-dLen+1)]),10*np.log10(thresh*np.ones(np.size(totalAvgPwr)))-30)
+ 
+         #energy detector threshold
+         #plt.plot(t,s,dLen*N-dLen+1)
+        plt.title('ARP Simulator')
+        plt.xlabel('Samples')
+        plt.ylabel('Total Average Power (dBm)')
+        plt.show()
+        plt.subplot(2,1,2)
+        #plt.subplot(2,1,2)
+        plt.plot(inputRF[dLen:dLen*N])
+        plt.title('ARP Simulator')
+        plt.xlabel('Samples')
+        plt.ylabel('Amplitude (V)')
+        plt.show()
+        self.saveDataSet(zip(inputRF[dLen:dLen*N]))
              
 
-    def saveDataSet(self, input,csvName):
-        with open(csvName, 'w+') as arp_dataset:
+    def saveDataSet(self, input):
+        with open("arp_dataset.csv", 'a') as arp_dataset:
              wr = csv.writer(arp_dataset, quoting=csv.QUOTE_ALL)
              wr.writerows(zip(input))
              
         
 a = ARP_Simulator()
-a.dataGenerator(-40,"dataSetOne.csv") #power level -40md
-a.dataGenerator(-10,"dataSetTwo.csv") #power level -40mdB
+a.dataGenerator(-40) #power level -40md
+#a.dataGenerator(-10) #power level -10mdB
+#a.dataGenerator(15) #power level 15mdB
